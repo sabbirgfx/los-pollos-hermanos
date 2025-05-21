@@ -1,0 +1,23 @@
+# PHP specific
+vendor/
+composer.lock
+.env
+
+# IDE specific
+.vscode/
+.idea/
+
+# System specific
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Config files that might contain sensitive information
+config/database.php
+
+# Dependency directories
+node_modules/ 
