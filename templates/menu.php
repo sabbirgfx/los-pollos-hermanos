@@ -1,57 +1,67 @@
 <?php
 // Menu component for Los Pollos Hermanos Pizza Selection
+
+// Define base path based on the file that includes this template
+$isRoot = !isset($isModuleContext);
+$basePath = $isRoot ? '' : '../../';
+
+// Fetch pizzas from the database
+if ($isRoot) {
+    require_once 'config/database.php';
+    require_once 'includes/functions.php';
+} else {
+    require_once '../../config/database.php';
+    require_once '../../includes/functions.php';
+}
+
+$conn = getDBConnection();
+$pizzaQuery = "SELECT p.* FROM products p 
+               JOIN categories c ON p.category_id = c.id 
+               WHERE c.name = 'Pizzas' ORDER BY p.name";
+try {
+    $stmt = $conn->query($pizzaQuery);
+    $pizzas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "<p>Error loading pizzas: " . $e->getMessage() . "</p>";
+    $pizzas = [];
+}
+
+// Mapping for pizza type to slug
+$pizzaSlugs = [
+    'Classic Margherita' => 'margherita',
+    'Pepperoni Supreme' => 'pepperoni',
+    'BBQ Chicken Delight' => 'bbq-chicken',
+    'Vegetarian Paradise' => 'veggie',
+    'Meat Lovers Dream' => 'meat-lovers',
+    'Hawaiian Special' => 'hawaiian'
+];
 ?>
 
 <div class="menu-section">
     <h2 class="menu-title">Our Signature Pizzas</h2>
     <div class="pizza-grid">
+        <?php foreach($pizzas as $pizza): 
+            $pizzaSlug = $pizzaSlugs[$pizza['name']] ?? strtolower(str_replace(' ', '-', $pizza['name']));
+            // Fix image path based on context
+            $imagePath = $pizza['image_url'];
+            if (strpos($imagePath, 'assets/') === 0 && !$isRoot) {
+                $imagePath = '../../' . $imagePath;
+            }
+        ?>
         <div class="pizza-card">
-            <img src="assets/images/pizzas/margherita.jpg" alt="Margherita Pizza" class="pizza-image">
-            <h3>Classic Margherita</h3>
-            <p class="description">Fresh tomatoes, mozzarella, basil, and our signature sauce on a perfectly crispy crust</p>
-            <p class="price">$14.99</p>
-            <button class="order-btn" data-pizza="margherita">Order Now</button>
+            <img src="<?php echo $imagePath; ?>" alt="<?php echo htmlspecialchars($pizza['name']); ?>" class="pizza-image">
+            <h3><?php echo htmlspecialchars($pizza['name']); ?></h3>
+            <p class="description"><?php echo htmlspecialchars($pizza['description']); ?></p>
+            <p class="price">$<?php echo number_format($pizza['price'], 2); ?></p>
+            <button class="order-btn" data-pizza="<?php echo $pizzaSlug; ?>" data-id="<?php echo $pizza['id']; ?>">Order Now</button>
         </div>
+        <?php endforeach; ?>
 
-        <div class="pizza-card">
-            <img src="assets/images/pizzas/pepperoni.jpg" alt="Pepperoni Supreme" class="pizza-image">
-            <h3>Pepperoni Supreme</h3>
-            <p class="description">Loaded with premium pepperoni, extra cheese, and our special herb-infused tomato sauce</p>
-            <p class="price">$16.99</p>
-            <button class="order-btn" data-pizza="pepperoni">Order Now</button>
+        <?php if (empty($pizzas)): ?>
+        <div class="no-products">
+            <p>No pizzas available at the moment. Please check back later.</p>
         </div>
-
-        <div class="pizza-card">
-            <img src="assets/images/pizzas/bbq-chicken.jpg" alt="BBQ Chicken Delight" class="pizza-image">
-            <h3>BBQ Chicken Delight</h3>
-            <p class="description">Grilled chicken, red onions, and bell peppers, drizzled with our house-made BBQ sauce</p>
-            <p class="price">$17.99</p>
-            <button class="order-btn" data-pizza="bbq-chicken">Order Now</button>
-        </div>
-
-        <div class="pizza-card">
-            <img src="assets/images/pizzas/veggie.jpg" alt="Vegetarian Paradise" class="pizza-image">
-            <h3>Vegetarian Paradise</h3>
-            <p class="description">Fresh mushrooms, bell peppers, olives, onions, and tomatoes with premium mozzarella</p>
-            <p class="price">$15.99</p>
-            <button class="order-btn" data-pizza="veggie">Order Now</button>
-        </div>
-
-        <div class="pizza-card">
-            <img src="assets/images/pizzas/meat-lovers.jpg" alt="Meat Lovers Dream" class="pizza-image">
-            <h3>Meat Lovers Dream</h3>
-            <p class="description">Pepperoni, Italian sausage, bacon, ham, and ground beef for the ultimate meat experience</p>
-            <p class="price">$18.99</p>
-            <button class="order-btn" data-pizza="meat-lovers">Order Now</button>
-        </div>
-
-        <div class="pizza-card">
-            <img src="assets/images/pizzas/hawaiian.jpg" alt="Hawaiian Special" class="pizza-image">
-            <h3>Hawaiian Special</h3>
-            <p class="description">Sweet pineapple chunks, premium ham, and extra cheese for a tropical twist</p>
-            <p class="price">$16.99</p>
-            <button class="order-btn" data-pizza="hawaiian">Order Now</button>
-        </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -129,6 +139,14 @@
 
 .order-btn:hover {
     background: #c0392b;
+}
+
+.no-products {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    background: #f8f8f8;
+    border-radius: 10px;
 }
 
 @media (max-width: 768px) {

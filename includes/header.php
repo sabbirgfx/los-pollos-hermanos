@@ -12,6 +12,9 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="nav-menu">
             <a href="../../modules/ordering/menu.php" class="nav-link">Menu</a>
             <?php if (isLoggedIn()): ?>
+                <?php if (hasRole('admin')): ?>
+                    <a href="../../modules/admin/dashboard.php" class="nav-link">Dashboard</a>
+                <?php endif; ?>
                 <a href="../../modules/ordering/cart.php" class="nav-link">Cart</a>
                 <a href="../../modules/profile/profile.php" class="nav-link">Profile</a>
                 <a href="../../modules/auth/logout.php" class="nav-link">Logout</a>

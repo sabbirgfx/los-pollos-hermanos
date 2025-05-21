@@ -1,6 +1,9 @@
 <?php
 require_once '../config/database.php';
 
+// Initialize database connection
+$conn = getDBConnection();
+
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -32,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
     
     try {
         // Start transaction
-        $conn->begin_transaction();
+        $conn->beginTransaction();
         
         // Insert order
         $order_query = "INSERT INTO orders (user_id, total_amount, status, delivery_type, delivery_address, 
@@ -41,15 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
         
         $stmt = $conn->prepare($order_query);
         $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-        $stmt->bind_param("idsss", 
+        $stmt->execute([
             $user_id,
             $total,
             $data['delivery_type'],
             $data['address'],
             $data['payment_method']
-        );
-        $stmt->execute();
-        $order_id = $conn->insert_id;
+        ]);
+        $order_id = $conn->lastInsertId();
         
         // Insert order items
         $item_query = "INSERT INTO order_items (order_id, product_id, quantity, unit_price, special_instructions) 
@@ -57,15 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
         $stmt = $conn->prepare($item_query);
         
         foreach ($_SESSION['cart'] as $item) {
-            $stmt->bind_param("iiids", 
+            $stmt->execute([
                 $order_id,
                 $item['product_id'],
                 $item['quantity'],
                 $item['price'],
                 $item['instructions'] ?? null
-            );
-            $stmt->execute();
-            $order_item_id = $conn->insert_id;
+            ]);
+            $order_item_id = $conn->lastInsertId();
             
             // Insert order item ingredients if it's a pizza
             if (isset($item['toppings']) && !empty($item['toppings'])) {
@@ -74,8 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
                 $stmt2 = $conn->prepare($ingredient_query);
                 
                 foreach ($item['toppings'] as $ingredient_id) {
-                    $stmt2->bind_param("ii", $order_item_id, $ingredient_id);
-                    $stmt2->execute();
+                    $stmt2->execute([$order_item_id, $ingredient_id]);
                 }
             }
         }
@@ -89,8 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
             if ($payment_success) {
                 $update_query = "UPDATE orders SET payment_status = 'completed' WHERE id = ?";
                 $stmt = $conn->prepare($update_query);
-                $stmt->bind_param("i", $order_id);
-                $stmt->execute();
+                $stmt->execute([$order_id]);
             } else {
                 throw new Exception('Payment processing failed');
             }
@@ -108,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
         
     } catch (Exception $e) {
         // Rollback transaction on error
-        $conn->rollback();
+        $conn->rollBack();
         $response['message'] = 'Error processing order: ' . $e->getMessage();
     }
     

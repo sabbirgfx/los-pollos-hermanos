@@ -1,4 +1,11 @@
 <?php
+require_once __DIR__ . '/../config/database.php';
+
+// Initialize database connection if not already initialized
+if (!isset($conn)) {
+    $conn = getDBConnection();
+}
+
 /**
  * Utility functions for the Los Pollos Hermanos pizza ordering system
  */
