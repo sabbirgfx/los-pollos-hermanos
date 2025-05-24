@@ -34,16 +34,22 @@ $orderItems = getOrderItems($orderId);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation - Los Pollos Hermanos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
         .order-confirmation {
             max-width: 800px;
             margin: 2rem auto;
             padding: 2rem;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .success-message {
@@ -57,28 +63,31 @@ $orderItems = getOrderItems($orderId);
 
         .success-message h1 {
             color: #2E7D32;
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
+            font-weight: 600;
         }
 
         .success-message p {
             color: #4CAF50;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            font-family: 'Roboto', sans-serif;
         }
 
         .order-details {
             padding: 1.5rem;
             background: #f9f9f9;
-            border-radius: 10px;
+            border-radius: 15px;
             margin-bottom: 2rem;
         }
 
         .order-details h2 {
             color: #333;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #eee;
+            font-weight: 600;
         }
 
         .order-info {
@@ -90,29 +99,32 @@ $orderItems = getOrderItems($orderId);
 
         .info-group {
             background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .info-group h3 {
             color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
             text-transform: uppercase;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
         }
 
         .info-group p {
             color: #333;
-            font-size: 1rem;
+            font-size: 1.1rem;
             margin: 0;
+            font-family: 'Poppins', sans-serif;
         }
 
         .order-items {
             background: white;
             padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .order-item {
@@ -129,6 +141,8 @@ $orderItems = getOrderItems($orderId);
         .item-details h4 {
             color: #333;
             margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
 
         .special-instructions {
@@ -136,41 +150,51 @@ $orderItems = getOrderItems($orderId);
             font-style: italic;
             margin-top: 0.5rem;
             font-size: 0.9rem;
+            font-family: 'Roboto', sans-serif;
         }
 
         .item-price {
             color: #ff6b00;
             font-weight: 600;
+            font-size: 1.1rem;
         }
 
         .order-total {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #eee;
+        }
+
+        .total-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
         }
 
         .total-price {
             color: #ff6b00;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: 700;
         }
 
         .order-actions {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             margin-top: 2rem;
         }
 
         .btn {
             flex: 1;
-            padding: 0.8rem;
+            padding: 1rem;
             text-align: center;
             border-radius: 8px;
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
         }
 
         .btn-primary {
@@ -178,10 +202,18 @@ $orderItems = getOrderItems($orderId);
             color: white;
         }
 
+        .btn-primary:hover {
+            background: #ff8533;
+        }
+
         .btn-secondary {
-            background: #f0f0f0;
+            background: #f5f5f5;
             color: #333;
             border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e9e9e9;
         }
 
         @media (max-width: 768px) {
@@ -197,21 +229,18 @@ $orderItems = getOrderItems($orderId);
             .order-actions {
                 flex-direction: column;
             }
+
+            .success-message h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <nav class="navbar">
-            <a href="../../index.php" class="logo">Los Pollos Hermanos</a>
-            <div class="nav-links">
-                <a href="menu.php">Menu</a>
-                <a href="cart.php">Cart</a>
-                <a href="orders.php">My Orders</a>
-                <a href="../auth/logout.php">Logout</a>
-            </div>
-        </nav>
-    </header>
+    <?php 
+    $isSubDirectory = true;
+    include '../../includes/header.php'; 
+    ?>
 
     <main>
         <div class="container">
@@ -273,24 +302,20 @@ $orderItems = getOrderItems($orderId);
                         <?php endforeach; ?>
 
                         <div class="order-total">
-                            <h3>Total Amount</h3>
-                            <p class="total-price"><?php echo formatPrice($order['total_amount']); ?></p>
+                            <span class="total-label">Total Amount:</span>
+                            <span class="total-price"><?php echo formatPrice($order['total_amount']); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="order-actions">
                     <a href="orders.php" class="btn btn-primary">View All Orders</a>
-                    <a href="menu.php" class="btn btn-secondary">Order Again</a>
+                    <a href="menu.php" class="btn btn-secondary">Continue Shopping</a>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; <?php echo date('Y'); ?> Los Pollos Hermanos. All rights reserved.</p>
-        </div>
-    </footer>
+    <?php include '../../includes/footer.php'; ?>
 </body>
 </html> 

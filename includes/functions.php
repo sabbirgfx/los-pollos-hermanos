@@ -52,7 +52,10 @@ function hasRole($role) {
  * Redirect to a specific page
  */
 function redirect($page) {
-    $base_url = 'http://localhost:8080/Los%20Pollos%20Hermanos';
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'];
+    $base_url = $protocol . $host . '/Los%20Pollos%20Hermanos';
+    
     if (strpos($page, 'http') === 0) {
         header("Location: $page");
     } else {

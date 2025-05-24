@@ -3,35 +3,40 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 
+// Set path variable for header/footer
+$isSubDirectory = true;
+
+// Initialize database connection
 $conn = getDBConnection();
 
-// Fetch categories
+// Get all categories with their products
 try {
-    $stmt = $conn->query("SELECT * FROM categories ORDER BY name");
+    // Get unique categories with a more specific query
+    $stmt = $conn->query("
+        SELECT DISTINCT c.id, c.name 
+        FROM categories c 
+        INNER JOIN products p ON c.id = p.category_id 
+        WHERE p.is_available = 1 
+        ORDER BY c.name
+    ");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $categories = [];
-}
-
-// Fetch products
-try {
-    $stmt = $conn->query("SELECT p.*, c.name as category_name 
-                         FROM products p 
-                         JOIN categories c ON p.category_id = c.id 
-                         ORDER BY c.name, p.name");
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $products = [];
-}
-
-// Group products by category
-$productsByCategory = [];
-foreach ($products as $product) {
-    $category = $product['category_name'];
-    if (!isset($productsByCategory[$category])) {
-        $productsByCategory[$category] = [];
+    
+    // Use a different statement handle for products
+    $productStmt = $conn->prepare("
+        SELECT * 
+        FROM products 
+        WHERE category_id = ? 
+        AND is_available = 1 
+        ORDER BY name
+    ");
+    
+    // Fetch products for each category
+    foreach ($categories as $i => $category) {
+        $productStmt->execute([$category['id']]);
+        $categories[$i]['products'] = $productStmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    $productsByCategory[$category][] = $product;
+} catch (PDOException $e) {
+    $error = "Error fetching menu: " . $e->getMessage();
 }
 ?>
 
@@ -42,29 +47,14 @@ foreach ($products as $product) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu - Los Pollos Hermanos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .menu-container {
             max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .menu-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .menu-header h1 {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 1rem;
-        }
-
-        .menu-header p {
-            color: #666;
-            font-size: 1.1rem;
+            margin: 0 auto;
+            padding: 2rem;
+            font-family: 'Poppins', sans-serif;
         }
 
         .category-section {
@@ -72,7 +62,7 @@ foreach ($products as $product) {
         }
 
         .category-title {
-            font-size: 1.8rem;
+            font-size: 2rem;
             color: #333;
             margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
@@ -86,10 +76,10 @@ foreach ($products as $product) {
         }
 
         .product-card {
-            background: white;
-            border-radius: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
 
@@ -101,14 +91,15 @@ foreach ($products as $product) {
             width: 100%;
             height: 200px;
             object-fit: cover;
+            background-color: #f5f5f5;
         }
 
-        .product-info {
+        .product-details {
             padding: 1.5rem;
         }
 
         .product-name {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 600;
             color: #333;
             margin-bottom: 0.5rem;
@@ -116,119 +107,78 @@ foreach ($products as $product) {
 
         .product-description {
             color: #666;
-            margin-bottom: 1rem;
             font-size: 0.9rem;
-            line-height: 1.5;
+            margin-bottom: 1rem;
+            line-height: 1.4;
         }
 
         .product-price {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 600;
             color: #ff6b00;
             margin-bottom: 1rem;
         }
 
-        .add-to-cart {
-            width: 100%;
-            padding: 0.8rem;
-            background: #ff6b00;
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background-color: #ff6b00;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e05f00;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e9e9e9;
         }
 
-        .add-to-cart:hover {
-            background: #ff8533;
-        }
-
-        /* Toast Notification Styles */
-        .toast-container {
+        .notification-container {
             position: fixed;
-            bottom: 20px;
+            top: 80px;
             right: 20px;
             z-index: 1000;
-        }
-
-        .toast {
-            display: flex;
-            align-items: center;
-            background-color: #333;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease-out forwards;
             max-width: 350px;
         }
 
-        .toast.success {
-            background-color: #28a745;
-            border-left: 5px solid #1e7e34;
+        .alert {
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        .toast.error {
-            background-color: #dc3545;
-            border-left: 5px solid #bd2130;
-        }
-
-        .toast-icon {
-            margin-right: 12px;
-            font-size: 20px;
-        }
-
-        .toast-content {
-            flex-grow: 1;
-        }
-
-        .toast-title {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-
-        .toast-message {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-
-        .toast-close {
-            background: none;
-            border: none;
+        .alert-success {
+            background-color: #4CAF50;
             color: white;
-            cursor: pointer;
-            font-size: 16px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
+            border-left: 5px solid #388E3C;
         }
 
-        .toast-close:hover {
-            opacity: 1;
-        }
-
-        .cart-count-badge {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .cart-count {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #ff6b00;
+        .alert-error {
+            background-color: #f44336;
             color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border-left: 5px solid #d32f2f;
         }
 
         @keyframes slideIn {
@@ -242,7 +192,7 @@ foreach ($products as $product) {
             }
         }
 
-        @keyframes slideOut {
+        @keyframes fadeOut {
             from {
                 transform: translateX(0);
                 opacity: 1;
@@ -252,179 +202,135 @@ foreach ($products as $product) {
                 opacity: 0;
             }
         }
-
-        @media (max-width: 768px) {
-            .products-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .toast-container {
-                left: 10px;
-                right: 10px;
-                bottom: 10px;
-            }
-
-            .toast {
-                width: 100%;
-                max-width: 100%;
-            }
-        }
     </style>
 </head>
 <body>
     <?php include '../../includes/header.php'; ?>
 
-    <div class="menu-container">
-        <div class="menu-header">
+    <main>
+        <div class="menu-container">
             <h1>Our Menu</h1>
-            <p>Discover our delicious selection of pizzas and more</p>
+            
+            <?php if (isset($error)): ?>
+                <div class="alert alert-error"><?php echo $error; ?></div>
+            <?php endif; ?>
+            
+            <?php foreach ($categories as $category): ?>
+                <section class="category-section">
+                    <h2 class="category-title"><?php echo htmlspecialchars($category['name']); ?></h2>
+                    
+                    <div class="products-grid">
+                        <?php foreach ($category['products'] as $product): ?>
+                            <div class="product-card">
+                                <img src="<?php echo $product['image_url'] ?: 'https://via.placeholder.com/300x200?text=Pizza'; ?>" 
+                                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                     class="product-image">
+                                
+                                <div class="product-details">
+                                    <h3 class="product-name"><?php echo htmlspecialchars($product['name']); ?></h3>
+                                    <p class="product-description"><?php echo htmlspecialchars($product['description']); ?></p>
+                                    <div class="product-price"><?php echo formatPrice($product['price']); ?></div>
+                                    
+                                    <div class="product-actions">
+                                        <?php if ($category['name'] === 'Pizzas'): ?>
+                                            <a href="customize-pizza.php?id=<?php echo $product['id']; ?>" class="btn btn-primary">
+                                                Customize
+                                            </a>
+                                        <?php else: ?>
+                                            <button class="btn btn-primary add-to-cart" 
+                                                    data-id="<?php echo $product['id']; ?>"
+                                                    data-name="<?php echo htmlspecialchars($product['name']); ?>"
+                                                    data-price="<?php echo $product['price']; ?>">
+                                                Add to Cart
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endforeach; ?>
         </div>
-
-        <?php 
-        // Set module context flag before including the menu template
-        $isModuleContext = true;
-        include '../../templates/menu.php'; 
-        ?>
-    </div>
-
-    <!-- Toast notification container -->
-    <div class="toast-container" id="toastContainer"></div>
+    </main>
 
     <?php include '../../includes/footer.php'; ?>
 
+    <div id="notification-container" class="notification-container"></div>
+
     <script>
-    // Function to show a toast notification
-    function showToast(type, title, message, duration = 3000) {
-        const toastContainer = document.getElementById('toastContainer');
-        
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        // Toast content
-        let iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
-        
-        toast.innerHTML = `
-            <div class="toast-icon">
-                <i class="${iconClass}"></i>
-            </div>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close">&times;</button>
-        `;
-        
-        // Append toast to container
-        toastContainer.appendChild(toast);
-        
-        // Handle close button
-        const closeBtn = toast.querySelector('.toast-close');
-        closeBtn.addEventListener('click', () => {
-            toast.style.animation = 'slideOut 0.3s ease-out forwards';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        });
-        
-        // Auto-remove toast after duration
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.style.animation = 'slideOut 0.3s ease-out forwards';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }
-        }, duration);
-    }
-
-    // Function to update cart count in header
-    function updateCartCount(count) {
-        const cartNavLink = document.querySelector('a.nav-link[href*="cart.php"]');
-        
-        if (cartNavLink) {
-            let badge = cartNavLink.querySelector('.cart-count');
-            
-            if (!badge) {
-                cartNavLink.classList.add('cart-count-badge');
-                badge = document.createElement('span');
-                badge.className = 'cart-count';
-                cartNavLink.appendChild(badge);
-            }
-            
-            badge.textContent = count;
-            
-            // Hide badge if count is 0
-            if (count <= 0) {
-                badge.style.display = 'none';
-            } else {
-                badge.style.display = 'flex';
-            }
-        }
-    }
-
-    function addToCart(productId) {
-        fetch('../../api/cart/add.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                product_id: productId,
-                quantity: 1
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success toast
-                showToast('success', 'Added to Cart', data.message);
-                
-                // Update cart count in header
-                if (data.cart_count) {
-                    updateCartCount(data.cart_count);
-                }
-            } else {
-                // Show error toast
-                showToast('error', 'Error', data.message || 'Could not add product to cart.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('error', 'Error', 'Could not add product to cart. Please try again.');
-        });
-    }
-    
-    // Add event listeners to all Order Now buttons
     document.addEventListener('DOMContentLoaded', function() {
-        const orderButtons = document.querySelectorAll('.order-btn');
-        orderButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // Get the product ID directly from the data-id attribute
-                const productId = parseInt(this.getAttribute('data-id'), 10);
+        // Notification function
+        function showNotification(message, type) {
+            const container = document.getElementById('notification-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            container.appendChild(alert);
+
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                alert.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    container.removeChild(alert);
+                }, 300);
+            }, 3000);
+        }
+
+        // Add to cart functionality
+        const addToCartButtons = document.querySelectorAll('.add-to-cart');
+        
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const productId = this.dataset.id;
+                const productName = this.dataset.name;
+                const productPrice = parseFloat(this.dataset.price);
                 
-                if (!productId || isNaN(productId)) {
-                    console.error('Invalid product ID');
-                    showToast('error', 'Error', 'Invalid product ID');
-                    return;
+                console.log('Attempting to add to cart:', {
+                    product_id: productId,
+                    name: productName,
+                    price: productPrice
+                });
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('product_id', productId);
+                formData.append('quantity', '1');
+
+                try {
+                    const response = await fetch('add_to_cart.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Log the response for debugging
+                    console.log('Response status:', response.status);
+                    
+                    if (!response.ok) {
+                        const text = await response.text();
+                        console.error('Response text:', text);
+                        throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification(`${productName} added to cart!`, 'success');
+                        // Update cart count if available
+                        const cartCountElement = document.querySelector('.cart-count');
+                        if (cartCountElement && data.cartCount) {
+                            cartCountElement.textContent = data.cartCount;
+                        }
+                    } else {
+                        console.error('Server error:', data);
+                        showNotification(data.message || 'Error adding item to cart', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error details:', error);
+                    showNotification('Error adding item to cart', 'error');
                 }
-                
-                // Call the addToCart function with the product ID
-                addToCart(productId);
             });
         });
-
-        // Initialize cart count
-        fetch('../../api/cart/count.php')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.count > 0) {
-                    updateCartCount(data.count);
-                }
-            })
-            .catch(error => console.error('Error fetching cart count:', error));
     });
     </script>
 </body>

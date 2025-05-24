@@ -3,6 +3,9 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 
+// Set path variable for header/footer
+$isSubDirectory = true;
+
 // Check if user is logged in and is an admin
 if (!isLoggedIn() || !hasRole('admin')) {
     redirect('modules/auth/login.php');
@@ -35,13 +38,41 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
             } else if ($userData['role'] == 'admin' && $_SESSION['user_id'] != 1) {
                 $error = "You don't have permission to delete an admin user.";
             } else {
-                // Delete user
-                $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-                $stmt->execute([$userId]);
-                $message = "User deleted successfully.";
+                try {
+                    // Start transaction
+                    $conn->beginTransaction();
+                    
+                    // First, get all orders for this user
+                    $stmt = $conn->prepare("SELECT id FROM orders WHERE user_id = ?");
+                    $stmt->execute([$userId]);
+                    $orders = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    
+                    // Delete order items for all user's orders
+                    if (!empty($orders)) {
+                        $placeholders = str_repeat('?,', count($orders) - 1) . '?';
+                        $stmt = $conn->prepare("DELETE FROM order_items WHERE order_id IN ($placeholders)");
+                        $stmt->execute($orders);
+                    }
+                    
+                    // Delete user's orders
+                    $stmt = $conn->prepare("DELETE FROM orders WHERE user_id = ?");
+                    $stmt->execute([$userId]);
+                    
+                    // Now delete the user
+                    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+                    $stmt->execute([$userId]);
+                    
+                    // Commit transaction
+                    $conn->commit();
+                    $message = "User and their associated data deleted successfully.";
+                } catch (PDOException $e) {
+                    // Rollback transaction on error
+                    $conn->rollBack();
+                    $error = "Error deleting user: " . $e->getMessage();
+                }
             }
         } catch (PDOException $e) {
-            $error = "Error deleting user: " . $e->getMessage();
+            $error = "Error fetching user data: " . $e->getMessage();
         }
     }
 }
@@ -63,9 +94,9 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Los Pollos Hermanos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="../../assets/css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <?php include '../../includes/header.php'; ?>

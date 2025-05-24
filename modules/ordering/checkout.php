@@ -6,10 +6,6 @@ require_once '../../includes/functions.php';
 // Initialize database connection
 $conn = getDBConnection();
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Check if user is logged in
 if (!isLoggedIn()) {
     redirect('/modules/auth/login.php');
@@ -19,6 +15,9 @@ if (!isLoggedIn()) {
 if (empty($_SESSION['cart'])) {
     redirect('/modules/ordering/menu.php');
 }
+
+// Set path variable for header/footer
+$isSubDirectory = true;
 
 // Get user details
 $user = getUserDetails($_SESSION['user_id']);
@@ -101,12 +100,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Los Pollos Hermanos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
         .checkout-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 2rem auto;
-            padding: 1rem;
+            padding: 0 1rem;
+        }
+
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .checkout-header h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1rem;
         }
 
         .checkout-grid {
@@ -118,8 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .order-summary {
             background: white;
             padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .order-summary h2 {
@@ -127,6 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #eee;
             font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
         }
 
         .cart-item {
@@ -139,8 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .cart-item-details h3 {
-            font-size: 1rem;
+            font-size: 1.1rem;
             margin-bottom: 0.5rem;
+            color: #333;
         }
 
         .menu-item-price {
@@ -158,14 +177,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .order-total h3 {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
         }
 
         .checkout-form {
             background: white;
             padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
@@ -181,10 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .form-control {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.75rem;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
         }
 
         .delivery-options, .payment-options {
@@ -195,10 +216,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .delivery-options label, .payment-options label {
             display: block;
-            padding: 0.5rem;
+            padding: 0.75rem;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delivery-options label:hover, .payment-options label:hover {
+            border-color: #ff6b00;
         }
 
         .delivery-options input[type="radio"], .payment-options input[type="radio"] {
@@ -210,10 +236,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: white;
             border: none;
             padding: 0.8rem 2rem;
-            border-radius: 4px;
-            font-weight: 500;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
             display: inline-block;
+            transition: background 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #ff8533;
         }
 
         @media (max-width: 768px) {
@@ -224,102 +255,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <header class="header">
-        <nav class="navbar">
-            <a href="../../index.php" class="logo">Los Pollos Hermanos</a>
-            <div class="nav-links">
-                <a href="menu.php">Menu</a>
-                <a href="cart.php">Cart</a>
-                <a href="orders.php">My Orders</a>
-                <a href="../auth/logout.php">Logout</a>
-            </div>
-        </nav>
-    </header>
+    <?php include '../../includes/header.php'; ?>
 
-    <main>
-        <div class="checkout-container">
+    <div class="checkout-container">
+        <div class="checkout-header">
             <h1>Checkout</h1>
+        </div>
 
-            <?php if ($error): ?>
-                <?php echo displayError($error); ?>
-            <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="alert alert-danger"><?php echo $error; ?></div>
+        <?php endif; ?>
 
-            <div class="checkout-grid">
-                <!-- Order Summary -->
-                <div class="order-summary">
-                    <h2>Order Summary</h2>
-                    <div class="cart-items">
-                        <?php foreach ($_SESSION['cart'] as $item): ?>
-                            <div class="cart-item">
-                                <div class="cart-item-details">
-                                    <h3><?php echo htmlspecialchars($item['name']); ?></h3>
-                                    <p>Quantity: <?php echo $item['quantity']; ?></p>
-                                    <p class="menu-item-price"><?php echo formatPrice($item['price'] * $item['quantity']); ?></p>
-                                </div>
+        <div class="checkout-grid">
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div class="cart-items">
+                    <?php foreach ($_SESSION['cart'] as $item): ?>
+                        <div class="cart-item">
+                            <div class="cart-item-details">
+                                <h3><?php echo htmlspecialchars($item['name']); ?></h3>
+                                <p>Quantity: <?php echo $item['quantity']; ?></p>
+                                <p class="menu-item-price"><?php echo formatPrice($item['price'] * $item['quantity']); ?></p>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="order-total">
-                        <h3>Total</h3>
-                        <div class="menu-item-price"><?php echo formatPrice($cartTotal); ?></div>
-                    </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-
-                <!-- Checkout Form -->
-                <div class="checkout-form">
-                    <form method="POST" action="">
-                        <div class="form-group">
-                            <label class="form-label">Delivery Type</label>
-                            <div class="delivery-options">
-                                <label>
-                                    <input type="radio" name="delivery_type" value="delivery" checked>
-                                    Delivery
-                                </label>
-                                <label>
-                                    <input type="radio" name="delivery_type" value="pickup">
-                                    Pickup
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group delivery-address-group">
-                            <label for="delivery_address" class="form-label">Delivery Address</label>
-                            <textarea id="delivery_address" name="delivery_address" class="form-control" rows="2"
-                                      placeholder="Enter your delivery address"><?php echo htmlspecialchars($user['address']); ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Payment Method</label>
-                            <div class="payment-options">
-                                <label>
-                                    <input type="radio" name="payment_method" value="online" checked>
-                                    Online Payment
-                                </label>
-                                <label>
-                                    <input type="radio" name="payment_method" value="cash">
-                                    Cash on Delivery
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="special_instructions" class="form-label">Special Instructions (Optional)</label>
-                            <textarea id="special_instructions" name="special_instructions" class="form-control" rows="2"
-                                      placeholder="Any special instructions for your order?"></textarea>
-                        </div>
-
-                        <button type="submit" class="btn-primary">Place Order</button>
-                    </form>
+                <div class="order-total">
+                    <h3>Total</h3>
+                    <div class="menu-item-price"><?php echo formatPrice($cartTotal); ?></div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; <?php echo date('Y'); ?> Los Pollos Hermanos. All rights reserved.</p>
+            <!-- Checkout Form -->
+            <div class="checkout-form">
+                <form method="POST" action="">
+                    <div class="form-group">
+                        <label class="form-label">Delivery Type</label>
+                        <div class="delivery-options">
+                            <label>
+                                <input type="radio" name="delivery_type" value="delivery" checked>
+                                Delivery
+                            </label>
+                            <label>
+                                <input type="radio" name="delivery_type" value="pickup">
+                                Pickup
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group delivery-address-group">
+                        <label for="delivery_address" class="form-label">Delivery Address</label>
+                        <textarea id="delivery_address" name="delivery_address" class="form-control" rows="2"
+                                  placeholder="Enter your delivery address"><?php echo htmlspecialchars($user['address']); ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <div class="payment-options">
+                            <label>
+                                <input type="radio" name="payment_method" value="online" checked>
+                                Online Payment
+                            </label>
+                            <label>
+                                <input type="radio" name="payment_method" value="cash">
+                                Cash on Delivery
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="special_instructions" class="form-label">Special Instructions (Optional)</label>
+                        <textarea id="special_instructions" name="special_instructions" class="form-control" rows="2"
+                                  placeholder="Any special instructions for your order?"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Place Order</button>
+                </form>
+            </div>
         </div>
-    </footer>
+    </div>
+
+    <?php include '../../includes/footer.php'; ?>
 
     <script>
         // Show/hide delivery address based on delivery type

@@ -3,6 +3,9 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 
+// Set path variable for header/footer
+$isSubDirectory = true;
+
 // Check if user is logged in and is an admin
 if (!isLoggedIn() || !hasRole('admin')) {
     redirect('modules/auth/login.php');

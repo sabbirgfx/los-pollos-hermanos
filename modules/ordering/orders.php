@@ -33,24 +33,44 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders - Los Pollos Hermanos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
         .orders-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 2rem auto;
-            padding: 1rem;
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            text-align: center;
         }
 
         .orders-list {
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .order-item {
-            padding: 1.5rem;
+            padding: 2rem;
             border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+
+        .order-item:hover {
+            background-color: #f8f9fa;
         }
 
         .order-item:last-child {
@@ -61,37 +81,53 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .order-number {
+            font-size: 1.2rem;
             font-weight: 600;
             color: #333;
+            font-family: 'Roboto', sans-serif;
         }
 
         .order-date {
             color: #666;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.95rem;
         }
 
         .order-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .info-group {
-            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .info-group:hover {
+            transform: translateY(-2px);
         }
 
         .info-label {
             color: #666;
             font-size: 0.9rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
         }
 
         .info-value {
             color: #333;
             font-weight: 500;
+            font-size: 1.1rem;
         }
 
         .order-total {
@@ -101,41 +137,99 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .no-orders {
             text-align: center;
-            padding: 3rem;
+            padding: 4rem 2rem;
             color: #666;
+        }
+
+        .no-orders p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #555;
         }
 
         .btn-view-details {
             display: inline-block;
-            padding: 0.5rem 1rem;
+            padding: 0.8rem 1.5rem;
             background: #ff6b00;
             color: white;
             text-decoration: none;
-            border-radius: 5px;
-            margin-top: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
         }
 
         .btn-view-details:hover {
             background: #ff8533;
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .status-pending {
+            background-color: #fff3e0;
+            color: #ff6b00;
+        }
+
+        .status-processing {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-cancelled {
+            background-color: #fbe9e7;
+            color: #d32f2f;
+        }
+
+        @media (max-width: 768px) {
+            .orders-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .order-item {
+                padding: 1.5rem;
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .order-info {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <nav class="navbar">
-            <a href="../../index.php" class="logo">Los Pollos Hermanos</a>
-            <div class="nav-links">
-                <a href="menu.php">Menu</a>
-                <a href="cart.php">Cart</a>
-                <a href="orders.php">My Orders</a>
-                <a href="../auth/logout.php">Logout</a>
-            </div>
-        </nav>
-    </header>
+    <?php 
+    $isSubDirectory = true;
+    include '../../includes/header.php'; 
+    ?>
 
     <main>
         <div class="orders-container">
-            <h1>My Orders</h1>
+            <h1 class="page-title">My Orders</h1>
 
             <?php if (empty($orders)): ?>
                 <div class="orders-list">
@@ -155,7 +249,11 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="order-info">
                                 <div class="info-group">
                                     <div class="info-label">Status</div>
-                                    <div class="info-value"><?php echo getOrderStatusText($order['status']); ?></div>
+                                    <div class="info-value">
+                                        <span class="status-badge status-<?php echo strtolower($order['status']); ?>">
+                                            <?php echo getOrderStatusText($order['status']); ?>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="info-group">
                                     <div class="info-label">Items</div>
@@ -174,10 +272,6 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; <?php echo date('Y'); ?> Los Pollos Hermanos. All rights reserved.</p>
-        </div>
-    </footer>
+    <?php include '../../includes/footer.php'; ?>
 </body>
 </html> 

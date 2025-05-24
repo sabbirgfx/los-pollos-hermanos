@@ -3,6 +3,9 @@ session_start();
 require_once '../../config/database.php';
 require_once '../../includes/functions.php';
 
+// Set path variable for header/footer
+$isSubDirectory = true;
+
 $conn = getDBConnection();
 
 // Fetch cart items
@@ -10,49 +13,21 @@ $cartItems = [];
 $total = 0;
 
 if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-    // Extract product IDs from the cart array
-    $productIds = [];
-    foreach ($_SESSION['cart'] as $item) {
-        if (isset($item['id'])) {
-            $productIds[] = $item['id'];
-        }
-    }
-    
-    if (!empty($productIds)) {
-        $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
-        
-        try {
-            $stmt = $conn->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
-            $stmt->execute($productIds);
-            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Process cart items directly from session
+    foreach ($_SESSION['cart'] as $cartItem) {
+        if (isset($cartItem['id'])) {
+            $quantity = $cartItem['quantity'];
+            $subtotal = $cartItem['price'] * $quantity;
+            $total += $subtotal;
             
-            // Create a lookup array for quick product access by ID
-            $productsById = [];
-            foreach ($products as $product) {
-                $productsById[$product['id']] = $product;
-            }
-            
-            // Process cart items with product data
-            foreach ($_SESSION['cart'] as $cartItem) {
-                if (isset($cartItem['id']) && isset($productsById[$cartItem['id']])) {
-                    $product = $productsById[$cartItem['id']];
-                    $quantity = $cartItem['quantity'];
-                    $subtotal = $product['price'] * $quantity;
-                    $total += $subtotal;
-                    
-                    $cartItems[] = [
-                        'id' => $product['id'],
-                        'name' => $product['name'],
-                        'price' => $product['price'],
-                        'quantity' => $quantity,
-                        'subtotal' => $subtotal,
-                        'image_url' => $cartItem['image_url'] ?? $product['image_url'] ?? 'assets/images/default-product.jpg'
-                    ];
-                }
-            }
-        } catch (PDOException $e) {
-            // Handle error
-            error_log("Error fetching cart products: " . $e->getMessage());
+            $cartItems[] = [
+                'id' => $cartItem['id'],
+                'name' => $cartItem['name'],
+                'price' => $cartItem['price'],
+                'quantity' => $quantity,
+                'subtotal' => $subtotal,
+                'image_url' => $cartItem['image_url'] ?? 'assets/images/default-product.jpg'
+            ];
         }
     }
 }
@@ -110,13 +85,15 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart - Los Pollos Hermanos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .cart-container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
+            font-family: 'Poppins', sans-serif;
         }
 
         .cart-header {
@@ -254,18 +231,28 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             margin-top: 1rem;
         }
 
-        .checkout-btn {
+        .checkout-btn, .btn-secondary {
             width: 100%;
             padding: 1rem;
-            background: #ff6b00;
-            color: white;
-            border: none;
             border-radius: 8px;
             font-size: 1.1rem;
             font-weight: 600;
-            cursor: pointer;
             transition: background 0.3s ease;
-            margin-top: 1rem;
+            text-decoration: none;
+            text-align: center;
+            line-height: 1.5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 3.5rem;
+            margin: 0;
+        }
+
+        .checkout-btn {
+            background: #ff6b00;
+            color: white;
+            border: none;
+            cursor: pointer;
         }
 
         .checkout-btn:hover {
@@ -281,13 +268,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             background-color: #f0f0f0;
             color: #333;
             border: 1px solid #ddd;
-            padding: 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: background 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
         }
         
         .btn-secondary:hover {
@@ -298,10 +278,15 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             display: flex;
             gap: 1rem;
             margin-top: 2rem;
+            align-items: center;
         }
         
         .cart-actions a {
             flex: 1;
+            height: 3.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         /* Toast Notification Styles */
@@ -310,6 +295,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             bottom: 20px;
             right: 20px;
             z-index: 1000;
+            font-family: 'Roboto', sans-serif;
         }
         
         .toast {
@@ -321,8 +307,21 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             border-radius: 8px;
             margin-bottom: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease-out forwards;
             max-width: 350px;
+            font-family: 'Roboto', sans-serif;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.hide {
+            transform: translateX(100%);
+            opacity: 0;
         }
         
         .toast.success {
@@ -345,14 +344,16 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         }
         
         .toast-title {
-            font-weight: 600;
+            font-weight: 500;
             font-size: 1rem;
             margin-bottom: 4px;
+            letter-spacing: 0.25px;
         }
         
         .toast-message {
             font-size: 0.9rem;
             opacity: 0.9;
+            font-weight: 300;
         }
         
         .toast-close {
@@ -413,6 +414,14 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             
             .cart-actions {
                 flex-direction: column;
+            }
+            
+            .cart-actions a {
+                width: 100%;
+            }
+            
+            .checkout-btn {
+                margin-top: 0;
             }
             
             .toast-container {
@@ -514,10 +523,16 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         // Append toast to container
         toastContainer.appendChild(toast);
         
+        // Trigger animation (small delay for effect)
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
         // Handle close button
         const closeBtn = toast.querySelector('.toast-close');
         closeBtn.addEventListener('click', () => {
-            toast.style.animation = 'slideOut 0.3s ease-out forwards';
+            toast.classList.remove('show');
+            toast.classList.add('hide');
             setTimeout(() => {
                 toast.remove();
             }, 300);
@@ -526,7 +541,8 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         // Auto-remove toast after duration
         setTimeout(() => {
             if (toast.parentNode) {
-                toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                toast.classList.remove('show');
+                toast.classList.add('hide');
                 setTimeout(() => {
                     if (toast.parentNode) {
                         toast.remove();

@@ -1,4 +1,6 @@
 <?php
+// Set path variable for header/footer
+$isSubDirectory = true;
 require_once '../config/database.php';
 require_once '../includes/header.php';
 

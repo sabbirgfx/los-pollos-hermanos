@@ -1,5 +1,10 @@
 <?php
 $current_year = date('Y');
+// Determine if we're at the root level or in a subdirectory if not already set
+if (!isset($isRoot)) {
+    $isRoot = !isset($isSubDirectory) || $isSubDirectory === false;
+}
+$basePath = $isRoot ? '' : '../../';
 ?>
 <footer class="footer">
     <div class="footer-content">
@@ -16,15 +21,15 @@ $current_year = date('Y');
         <div class="footer-section">
             <h3>Quick Links</h3>
             <ul class="footer-links">
-                <li><a href="../../index.php">Home</a></li>
-                <li><a href="../../modules/ordering/menu.php">Menu</a></li>
-                <li><a href="../../modules/ordering/cart.php">Cart</a></li>
+                <li><a href="<?php echo $basePath; ?>index.php">Home</a></li>
+                <li><a href="<?php echo $basePath; ?>modules/ordering/menu.php">Menu</a></li>
+                <li><a href="<?php echo $basePath; ?>modules/ordering/cart.php">Cart</a></li>
                 <?php if (isLoggedIn()): ?>
-                    <li><a href="../../modules/profile/profile.php">My Profile</a></li>
-                    <li><a href="../../modules/ordering/orders.php">My Orders</a></li>
+                    <li><a href="<?php echo $basePath; ?>modules/profile/profile.php">My Profile</a></li>
+                    <li><a href="<?php echo $basePath; ?>modules/ordering/orders.php">My Orders</a></li>
                 <?php else: ?>
-                    <li><a href="../../modules/auth/login.php">Login</a></li>
-                    <li><a href="../../modules/auth/register.php">Register</a></li>
+                    <li><a href="<?php echo $basePath; ?>modules/auth/login.php">Login</a></li>
+                    <li><a href="<?php echo $basePath; ?>modules/auth/register.php">Register</a></li>
                 <?php endif; ?>
             </ul>
         </div>
@@ -50,6 +55,7 @@ $current_year = date('Y');
     color: #fff;
     padding: 4rem 0 0;
     margin-top: 4rem;
+    font-family: 'Poppins', sans-serif;
 }
 
 .footer-content {

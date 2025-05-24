@@ -6,6 +6,9 @@ require_once 'includes/functions.php';
 // Check if user is logged in
 $isLoggedIn = isset($_SESSION['user_id']);
 $userRole = $isLoggedIn ? $_SESSION['user_role'] : null;
+
+// Set path variable for header/footer
+$isSubDirectory = false;
 ?>
 
 <!DOCTYPE html>
@@ -19,7 +22,7 @@ $userRole = $isLoggedIn ? $_SESSION['user_role'] : null;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <?php include 'includes/root_header.php'; ?>
+    <?php include 'includes/header.php'; ?>
 
     <main>
         <section class="hero">
@@ -115,7 +118,7 @@ $userRole = $isLoggedIn ? $_SESSION['user_role'] : null;
         </section>
     </main>
 
-    <?php include 'includes/root_footer.php'; ?>
+    <?php include 'includes/footer.php'; ?>
 
     <script src="assets/js/main.js"></script>
 </body>

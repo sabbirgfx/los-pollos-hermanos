@@ -65,6 +65,9 @@ $pizzaSlugs = [
     </div>
 </div>
 
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
 <style>
 .menu-section {
     max-width: 1200px;
@@ -149,6 +152,97 @@ $pizzaSlugs = [
     border-radius: 10px;
 }
 
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+    min-width: 300px;
+}
+
+.toast.success {
+    border-left: 4px solid #2ecc71;
+}
+
+.toast.error {
+    border-left: 4px solid #e74c3c;
+}
+
+.toast-icon {
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.toast.success .toast-icon {
+    color: #2ecc71;
+}
+
+.toast.error .toast-icon {
+    color: #e74c3c;
+}
+
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.toast-message {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    margin-left: 12px;
+}
+
+.toast-close:hover {
+    color: #666;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 @media (max-width: 768px) {
     .pizza-grid {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -157,5 +251,107 @@ $pizzaSlugs = [
     .menu-title {
         font-size: 2rem;
     }
+
+    .toast {
+        min-width: auto;
+        width: calc(100vw - 40px);
+    }
 }
-</style> 
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all Order Now buttons
+    const orderButtons = document.querySelectorAll('.order-btn');
+    
+    // Add click event listener to each button
+    orderButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const productId = this.dataset.id;
+            
+            try {
+                const response = await fetch('<?php echo $basePath; ?>modules/ordering/add_to_cart.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `product_id=${productId}&quantity=1`
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show success message
+                    showToast('success', 'Success', 'Item added to cart!');
+                    
+                    // Update cart count if it exists
+                    const cartCount = document.querySelector('.cart-count');
+                    if (cartCount) {
+                        cartCount.textContent = data.cartCount;
+                    }
+                } else {
+                    // Show error message
+                    showToast('error', 'Error', data.message || 'Failed to add item to cart');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('error', 'Error', 'Failed to add item to cart');
+            }
+        });
+    });
+
+    // Toast notification function
+    function showToast(type, title, message) {
+        const toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            // Create toast container if it doesn't exist
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // Toast content
+        const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close">&times;</button>
+        `;
+        
+        // Add toast to container
+        toastContainer.appendChild(toast);
+        
+        // Handle close button
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => {
+            toast.style.animation = 'slideOut 0.3s ease-out forwards';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        });
+        
+        // Auto-remove toast after 3 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }, 3000);
+    }
+});
+</script> 
