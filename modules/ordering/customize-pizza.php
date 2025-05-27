@@ -21,7 +21,7 @@ if (!$pizza || $pizza['category_id'] != 9) { // Category ID 9 is for pizzas
 
 // Get available toppings
 try {
-    $stmt = $conn->query("SELECT * FROM toppings WHERE is_available = 1 ORDER BY name");
+    $stmt = $conn->query("SELECT * FROM ingredients WHERE is_available = 1 ORDER BY name");
     $toppings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $error = "Error fetching toppings: " . $e->getMessage();
@@ -38,7 +38,8 @@ $sauces = [
     'tomato' => 'Classic Tomato Sauce',
     'bbq' => 'BBQ Sauce',
     'alfredo' => 'Alfredo Sauce',
-    'pesto' => 'Pesto Sauce'
+    'pesto' => 'Pesto Sauce',
+    'sweet_chili' => 'Sweet Chili Sauce'
 ];
 
 $cheese_options = [

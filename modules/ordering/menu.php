@@ -222,7 +222,7 @@ try {
                     <div class="products-grid">
                         <?php foreach ($category['products'] as $product): ?>
                             <div class="product-card">
-                                <img src="<?php echo $product['image_url'] ?: 'https://via.placeholder.com/300x200?text=Pizza'; ?>" 
+                                <img src="../../<?php echo $product['image_url'] ?: 'https://via.placeholder.com/300x200?text=Pizza'; ?>" 
                                      alt="<?php echo htmlspecialchars($product['name']); ?>" 
                                      class="product-image">
                                 

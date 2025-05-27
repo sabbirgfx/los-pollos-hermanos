@@ -89,7 +89,7 @@ try {
         // Add toppings to name if any
         if (!empty($customization['toppings'])) {
             $toppings = [];
-            $stmt = $conn->prepare("SELECT name FROM toppings WHERE id IN (" . str_repeat('?,', count($customization['toppings']) - 1) . "?)");
+            $stmt = $conn->prepare("SELECT name FROM ingredients WHERE id IN (" . str_repeat('?,', count($customization['toppings']) - 1) . "?)");
             $stmt->execute($customization['toppings']);
             while ($topping = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $toppings[] = $topping['name'];
