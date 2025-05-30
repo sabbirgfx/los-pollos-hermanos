@@ -78,7 +78,6 @@ $isSubDirectory = false;
         <section class="testimonials">
             <div class="container">
                 <h2 class="text-center mb-3">What Our Customers Say</h2>
-                <br>
                 <div class="testimonial-grid">
                     <div class="testimonial-card">
                         <div class="stars">
@@ -88,8 +87,8 @@ $isSubDirectory = false;
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
                         </div>
-                        <p>"Best pizza in town! The crust is perfect and the toppings are always fresh."</p>
-                        <p class="customer">- John D.</p>
+                        <p>"Best pizza in town! The crust is perfect and the toppings are always fresh. I've tried many pizzerias in the area, but Los Pollos Hermanos is definitely my favorite."</p>
+                        <p class="customer">- John D. from Albuquerque</p>
                     </div>
                     <div class="testimonial-card">
                         <div class="stars">
@@ -99,8 +98,19 @@ $isSubDirectory = false;
                             <i class="fas fa-star"></i>
                             <i class="fas fa-star"></i>
                         </div>
-                        <p>"Fast delivery and the pizza is always hot and delicious!"</p>
-                        <p class="customer">- Sarah M.</p>
+                        <p>"Fast delivery and the pizza is always hot and delicious! The online ordering system is so easy to use, and their customer service is outstanding."</p>
+                        <p class="customer">- Sarah M. from Phoenix</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p>"Their specialty pizzas are incredible! The Pollos Special with its unique blend of spices and perfectly cooked chicken is a must-try for anyone visiting."</p>
+                        <p class="customer">- Mike T. from Santa Fe</p>
                     </div>
                 </div>
             </div>
@@ -108,11 +118,52 @@ $isSubDirectory = false;
 
         <section class="contact-section">
             <div class="container">
-                <div class="contact-card">
-                    <h2 class="mb-2">Contact Us</h2>
-                    <p>Have questions? We're here to help!</p>
-                    <p><i class="fas fa-phone"></i> (555) 123-4567</p>
-                    <p><i class="fas fa-envelope"></i> info@lospolloshermanos.com</p>
+                <h2 class="section-title text-center mb-3">Contact Us</h2>
+                <div class="contact-flex">
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h3>Call Us</h3>
+                                <p>(02) 9876 5432</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h3>Email Us</h3>
+                                <p>info@lospolloshermanos.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="contact-text">
+                                <h3>Find Us</h3>
+                                <p>123 Pizza Street, Sydney, NSW</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-hours">
+                        <h3>Opening Hours</h3>
+                        <div class="hours-item">
+                            <span class="day">Monday - Thursday</span>
+                            <span class="time">11:00 AM - 10:00 PM</span>
+                        </div>
+                        <div class="hours-item">
+                            <span class="day">Friday - Saturday</span>
+                            <span class="time">11:00 AM - 11:00 PM</span>
+                        </div>
+                        <div class="hours-item">
+                            <span class="day">Sunday</span>
+                            <span class="time">12:00 PM - 9:00 PM</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

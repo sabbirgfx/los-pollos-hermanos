@@ -195,7 +195,23 @@ function getOrderItems($orderId) {
         WHERE oi.order_id = ?
     ");
     $stmt->execute([$orderId]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get customizations for each item
+    foreach ($orderItems as $key => $item) {
+        $stmt = $conn->prepare("
+            SELECT oii.*, i.name as ingredient_name
+            FROM order_item_ingredients oii
+            JOIN ingredients i ON oii.ingredient_id = i.id
+            WHERE oii.order_item_id = ?
+        ");
+        $stmt->execute([$item['id']]);
+        $customizations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $orderItems[$key]['customizations'] = $customizations;
+    }
+    
+    return $orderItems;
 }
 
 /**
@@ -205,6 +221,48 @@ function updateOrderStatus($orderId, $status) {
     global $conn;
     $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
     return $stmt->execute([$status, $orderId]);
+}
+
+/**
+ * Parse and format pizza customization details
+ */
+function formatPizzaCustomizations($specialInstructions) {
+    if (empty($specialInstructions)) {
+        return null;
+    }
+    
+    // Check if this contains pizza customizations
+    if (strpos($specialInstructions, 'Pizza Customizations:') !== false) {
+        // Split by | to separate regular instructions from customizations
+        $parts = explode(' | ', $specialInstructions);
+        $customizationPart = '';
+        $regularInstructions = '';
+        
+        foreach ($parts as $part) {
+            if (strpos($part, 'Pizza Customizations:') !== false) {
+                $customizationPart = $part;
+            } else {
+                $regularInstructions .= $part . ' ';
+            }
+        }
+        
+        if (!empty($customizationPart)) {
+            // Remove "Pizza Customizations: " prefix
+            $customizationDetails = str_replace('Pizza Customizations: ', '', $customizationPart);
+            
+            return [
+                'has_customizations' => true,
+                'customizations' => $customizationDetails,
+                'regular_instructions' => trim($regularInstructions)
+            ];
+        }
+    }
+    
+    return [
+        'has_customizations' => false,
+        'customizations' => '',
+        'regular_instructions' => $specialInstructions
+    ];
 }
 
 /**

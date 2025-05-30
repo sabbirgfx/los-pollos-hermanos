@@ -152,6 +152,21 @@ $orderItems = getOrderItems($orderId);
             font-size: 0.9rem;
             font-family: 'Roboto', sans-serif;
         }
+        
+        .item-customizations {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .item-customizations ul {
+            margin: 0.25rem 0 0;
+            padding-left: 1.25rem;
+            color: #666;
+        }
+        
+        .item-customizations strong {
+            color: #333;
+        }
 
         .item-price {
             color: #ff6b00;
@@ -234,6 +249,25 @@ $orderItems = getOrderItems($orderId);
                 font-size: 2rem;
             }
         }
+
+        .pizza-customizations {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            background: #fff5f0;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border-left: 4px solid #ff6b00;
+        }
+        
+        .pizza-customizations strong {
+            color: #ff6b00;
+        }
+        
+        .customization-details {
+            margin: 0.5rem 0 0;
+            color: #333;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -289,9 +323,36 @@ $orderItems = getOrderItems($orderId);
                                 <div class="item-details">
                                     <h4><?php echo htmlspecialchars($item['product_name']); ?></h4>
                                     <p>Quantity: <?php echo $item['quantity']; ?></p>
-                                    <?php if ($item['special_instructions']): ?>
+                                    
+                                    <?php 
+                                    // Parse special instructions for pizza customizations
+                                    $customizationInfo = formatPizzaCustomizations($item['special_instructions']);
+                                    ?>
+                                    
+                                    <?php if ($customizationInfo && $customizationInfo['has_customizations']): ?>
+                                        <div class="pizza-customizations">
+                                            <strong>Pizza Customizations:</strong>
+                                            <p class="customization-details"><?php echo htmlspecialchars($customizationInfo['customizations']); ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($item['customizations'])): ?>
+                                        <div class="item-customizations">
+                                            <strong>Additional Toppings:</strong>
+                                            <ul>
+                                                <?php foreach ($item['customizations'] as $customization): ?>
+                                                    <li>
+                                                        <?php echo htmlspecialchars($customization['ingredient_name']); ?> 
+                                                        - <?php echo $customization['is_added'] ? 'Added' : 'Removed'; ?>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($customizationInfo && !empty($customizationInfo['regular_instructions'])): ?>
                                         <p class="special-instructions">
-                                            <?php echo htmlspecialchars($item['special_instructions']); ?>
+                                            <strong>Special Instructions:</strong> <?php echo htmlspecialchars($customizationInfo['regular_instructions']); ?>
                                         </p>
                                     <?php endif; ?>
                                 </div>

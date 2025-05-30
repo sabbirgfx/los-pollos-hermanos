@@ -95,7 +95,9 @@ $pizzaSlugs = [
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     transition: transform 0.3s ease;
-    padding-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .pizza-card:hover {
@@ -118,14 +120,14 @@ $pizzaSlugs = [
     color: #666;
     margin: 0.5rem 1rem;
     font-size: 0.9rem;
-    min-height: 60px;
+    flex-grow: 1;
 }
 
 .price {
     color: #e74c3c;
     font-size: 1.4rem;
     font-weight: bold;
-    margin: 1rem;
+    margin: 0.5rem 1rem 0.5rem 1rem;
 }
 
 .order-btn {
@@ -136,7 +138,7 @@ $pizzaSlugs = [
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    margin: 0 1rem;
+    margin: 0 1rem 1rem 1rem;
     transition: background 0.3s ease;
 }
 

@@ -117,9 +117,22 @@ $orderItems = getOrderItems($orderId);
                                 <div class="item-details">
                                     <h4><?php echo htmlspecialchars($item['product_name']); ?></h4>
                                     <p>Quantity: <?php echo $item['quantity']; ?></p>
-                                    <?php if ($item['special_instructions']): ?>
+                                    
+                                    <?php 
+                                    // Parse special instructions for pizza customizations
+                                    $customizationInfo = formatPizzaCustomizations($item['special_instructions']);
+                                    ?>
+                                    
+                                    <?php if ($customizationInfo && $customizationInfo['has_customizations']): ?>
+                                        <div class="pizza-customizations">
+                                            <strong>Pizza Customizations:</strong>
+                                            <p class="customization-details"><?php echo htmlspecialchars($customizationInfo['customizations']); ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($customizationInfo && !empty($customizationInfo['regular_instructions'])): ?>
                                         <p class="special-instructions">
-                                            Special Instructions: <?php echo htmlspecialchars($item['special_instructions']); ?>
+                                            <strong>Special Instructions:</strong> <?php echo htmlspecialchars($customizationInfo['regular_instructions']); ?>
                                         </p>
                                     <?php endif; ?>
                                 </div>

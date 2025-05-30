@@ -37,9 +37,9 @@ $basePath = $isRoot ? '' : '../../';
         <div class="footer-section">
             <h3>Contact Us</h3>
             <ul class="contact-info">
-                <li><i class="fas fa-phone"></i> (555) 123-4567</li>
+                <li><i class="fas fa-phone"></i> (02) 9876 5432</li>
                 <li><i class="fas fa-envelope"></i> info@lospolloshermanos.com</li>
-                <li><i class="fas fa-map-marker-alt"></i> 123 Pizza Street, Albuquerque, NM</li>
+                <li><i class="fas fa-map-marker-alt"></i> 123 Pizza Street, Sydney, NSW</li>
             </ul>
         </div>
     </div>

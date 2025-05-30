@@ -59,22 +59,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strpos($_SERVER['CONTENT_TYPE'], 'a
         $stmt = $conn->prepare($item_query);
         
         foreach ($_SESSION['cart'] as $item) {
+            // Prepare special instructions including customization data
+            $instructions = $item['instructions'] ?? null;
+            
+            // If it's a customized pizza, add customization details to instructions
+            if (isset($item['is_customized']) && $item['is_customized'] && isset($item['customization'])) {
+                $customizationText = "Pizza Customizations: ";
+                $customizationText .= "Crust: " . ucfirst($item['customization']['crust_size']) . ", ";
+                $customizationText .= "Sauce: " . ucfirst($item['customization']['sauce']) . ", ";
+                $customizationText .= "Cheese: " . ucfirst($item['customization']['cheese']);
+                
+                if (!empty($item['customization']['toppings'])) {
+                    // Get topping names
+                    $toppingNames = [];
+                    $placeholders = str_repeat('?,', count($item['customization']['toppings']) - 1) . '?';
+                    $toppingStmt = $conn->prepare("SELECT name FROM ingredients WHERE id IN ($placeholders)");
+                    $toppingStmt->execute($item['customization']['toppings']);
+                    while ($topping = $toppingStmt->fetch(PDO::FETCH_ASSOC)) {
+                        $toppingNames[] = $topping['name'];
+                    }
+                    $customizationText .= ", Toppings: " . implode(', ', $toppingNames);
+                }
+                
+                // Combine with special instructions
+                if (!empty($instructions)) {
+                    $instructions .= " | " . $customizationText;
+                } else {
+                    $instructions = $customizationText;
+                }
+            }
+            
             $stmt->execute([
                 $order_id,
-                $item['product_id'],
+                $item['id'],
                 $item['quantity'],
                 $item['price'],
-                $item['instructions'] ?? null
+                $instructions
             ]);
             $order_item_id = $conn->lastInsertId();
             
-            // Insert order item ingredients if it's a pizza
-            if (isset($item['toppings']) && !empty($item['toppings'])) {
+            // Insert order item ingredients if it's a customized pizza
+            if (isset($item['is_customized']) && $item['is_customized'] && isset($item['customization']['toppings'])) {
                 $ingredient_query = "INSERT INTO order_item_ingredients (order_item_id, ingredient_id, is_added) 
                                    VALUES (?, ?, 1)";
                 $stmt2 = $conn->prepare($ingredient_query);
                 
-                foreach ($item['toppings'] as $ingredient_id) {
+                foreach ($item['customization']['toppings'] as $ingredient_id) {
                     $stmt2->execute([$order_item_id, $ingredient_id]);
                 }
             }

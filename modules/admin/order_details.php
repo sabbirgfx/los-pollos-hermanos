@@ -254,9 +254,21 @@ try {
                                                     <span>Price: <?php echo formatPrice($item['unit_price']); ?></span>
                                                 </div>
                                                 
+                                                <?php 
+                                                // Parse special instructions for pizza customizations
+                                                $customizationInfo = formatPizzaCustomizations($item['special_instructions']);
+                                                ?>
+                                                
+                                                <?php if ($customizationInfo && $customizationInfo['has_customizations']): ?>
+                                                    <div class="pizza-customizations">
+                                                        <h5>Pizza Customizations</h5>
+                                                        <p class="customization-details"><?php echo htmlspecialchars($customizationInfo['customizations']); ?></p>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
                                                 <?php if (!empty($item['customizations'])): ?>
                                                     <div class="item-customizations">
-                                                        <h5>Customizations</h5>
+                                                        <h5>Additional Toppings</h5>
                                                         <ul>
                                                             <?php foreach ($item['customizations'] as $customization): ?>
                                                                 <li>
@@ -269,10 +281,10 @@ try {
                                                     </div>
                                                 <?php endif; ?>
                                                 
-                                                <?php if (!empty($item['special_instructions'])): ?>
+                                                <?php if ($customizationInfo && !empty($customizationInfo['regular_instructions'])): ?>
                                                     <div class="item-instructions">
                                                         <h5>Special Instructions</h5>
-                                                        <p><?php echo nl2br(htmlspecialchars($item['special_instructions'])); ?></p>
+                                                        <p><?php echo nl2br(htmlspecialchars($customizationInfo['regular_instructions'])); ?></p>
                                                     </div>
                                                 <?php endif; ?>
                                                 

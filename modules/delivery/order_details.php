@@ -6,8 +6,8 @@ require_once '../../includes/functions.php';
 // Set path variable for header/footer
 $isSubDirectory = true;
 
-// Check if user is logged in and has kitchen staff role
-if (!isLoggedIn() || !hasRole('kitchen_staff')) {
+// Check if user is logged in and has delivery staff role
+if (!isLoggedIn() || !hasRole('delivery_staff')) {
     redirect('../../index.php');
     exit();
 }
@@ -19,7 +19,7 @@ $conn = getDBConnection();
 $orderId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if (!$orderId) {
-    redirect('modules/kitchen/orders.php');
+    redirect('modules/delivery/orders.php');
     exit();
 }
 
@@ -31,7 +31,7 @@ $error = '';
 if (isset($_POST['update_status']) && isset($_POST['status'])) {
     $status = $_POST['status'];
     
-    if ($status === 'preparing' || $status === 'ready_for_delivery' || $status === 'ready_for_pickup') {
+    if ($status === 'out_for_delivery' || $status === 'delivered') {
         try {
             updateOrderStatus($orderId, $status);
             $message = "Order status updated successfully.";
@@ -39,7 +39,7 @@ if (isset($_POST['update_status']) && isset($_POST['status'])) {
             $error = "Error updating order status: " . $e->getMessage();
         }
     } else {
-        $error = "Invalid status for kitchen staff.";
+        $error = "Invalid status for delivery staff.";
     }
 }
 
@@ -49,13 +49,14 @@ try {
         SELECT o.*, u.username, u.first_name, u.last_name, u.phone
         FROM orders o
         JOIN users u ON o.user_id = u.id
-        WHERE o.id = ? AND o.status IN ('pending', 'preparing', 'ready_for_delivery', 'ready_for_pickup')
+        WHERE o.id = ? AND o.delivery_type = 'delivery' 
+        AND o.status IN ('ready_for_delivery', 'out_for_delivery', 'delivered')
     ");
     $stmt->execute([$orderId]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$order) {
-        redirect('modules/kitchen/orders.php');
+        redirect('modules/delivery/orders.php');
         exit();
     }
 
@@ -99,46 +100,6 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/staff.css">
-    
-    <style>
-        .special-instructions {
-            margin-top: 0.75rem;
-            font-size: 0.9rem;
-        }
-        
-        .special-instructions p {
-            margin: 0.25rem 0 0;
-        }
-        
-        .item-customizations {
-            margin-top: 0.75rem;
-            font-size: 0.9rem;
-        }
-        
-        .item-customizations ul {
-            margin: 0.25rem 0 0;
-            padding-left: 1.25rem;
-        }
-        
-        .pizza-customizations {
-            margin-top: 0.75rem;
-            font-size: 0.9rem;
-            background: #fff5f0;
-            padding: 0.75rem;
-            border-radius: 6px;
-            border-left: 4px solid #ff6b00;
-        }
-        
-        .pizza-customizations strong {
-            color: #ff6b00;
-        }
-        
-        .customization-details {
-            margin: 0.5rem 0 0;
-            color: #333;
-            font-weight: 500;
-        }
-    </style>
 </head>
 <body>
     <?php include '../../includes/header.php'; ?>
@@ -168,35 +129,47 @@ try {
                         </span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Order Type:</span>
-                        <span class="info-value"><?php echo ucfirst($order['delivery_type']); ?></span>
+                        <span class="info-label">Customer:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phone:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($order['phone']); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Delivery Address:</span>
+                        <span class="info-value"><?php echo nl2br(htmlspecialchars($order['delivery_address'])); ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Order Time:</span>
                         <span class="info-value"><?php echo date('F j, Y, g:i a', strtotime($order['created_at'])); ?></span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Customer:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($order['first_name'] . ' ' . $order['last_name']); ?></span>
+                        <span class="info-label">Payment Method:</span>
+                        <span class="info-value"><?php echo getPaymentMethodText($order['payment_method']); ?></span>
                     </div>
-                    <?php if ($order['delivery_type'] === 'delivery'): ?>
-                        <div class="info-row">
-                            <span class="info-label">Delivery Address:</span>
-                            <span class="info-value"><?php echo htmlspecialchars($order['delivery_address']); ?></span>
-                        </div>
-                    <?php endif; ?>
+                    <div class="info-row">
+                        <span class="info-label">Payment Status:</span>
+                        <span class="info-value"><?php echo ucfirst($order['payment_status']); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Amount:</span>
+                        <span class="info-value info-total"><?php echo formatPrice($order['total_amount']); ?></span>
+                    </div>
                 </div>
 
-                <?php if ($order['status'] === 'pending' || $order['status'] === 'preparing'): ?>
+                <?php if ($order['status'] === 'ready_for_delivery'): ?>
                     <div class="order-actions">
                         <form method="POST" class="status-form">
-                            <?php if ($order['status'] === 'pending'): ?>
-                                <input type="hidden" name="status" value="preparing">
-                                <button type="submit" name="update_status" class="btn btn-primary">Start Preparing</button>
-                            <?php elseif ($order['status'] === 'preparing'): ?>
-                                <input type="hidden" name="status" value="<?php echo $order['delivery_type'] === 'delivery' ? 'ready_for_delivery' : 'ready_for_pickup'; ?>">
-                                <button type="submit" name="update_status" class="btn btn-primary">Mark as Ready</button>
-                            <?php endif; ?>
+                            <input type="hidden" name="status" value="out_for_delivery">
+                            <button type="submit" name="update_status" class="btn btn-primary">Start Delivery</button>
+                        </form>
+                    </div>
+                <?php elseif ($order['status'] === 'out_for_delivery'): ?>
+                    <div class="order-actions">
+                        <form method="POST" class="status-form">
+                            <input type="hidden" name="status" value="delivered">
+                            <button type="submit" name="update_status" class="btn btn-primary">Mark as Delivered</button>
                         </form>
                     </div>
                 <?php endif; ?>
@@ -255,5 +228,104 @@ try {
     </div>
 
     <?php include '../../includes/footer.php'; ?>
+    
+    <style>
+        .info-total {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: var(--primary-color);
+        }
+        
+        .order-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .order-details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .order-info-card, .order-items-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+        
+        .order-info-card h3, .order-items-card h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .info-row {
+            display: flex;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            width: 140px;
+            flex-shrink: 0;
+        }
+        
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .item-card {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 1rem;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .item-header h4 {
+            margin: 0;
+        }
+        
+        .item-quantity {
+            background: #f5f5f5;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .item-description {
+            margin: 0.5rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .special-instructions, .item-customizations {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .special-instructions p, .item-customizations ul {
+            margin: 0.25rem 0 0;
+        }
+        
+        .item-customizations ul {
+            padding-left: 1.25rem;
+        }
+    </style>
 </body>
 </html> 

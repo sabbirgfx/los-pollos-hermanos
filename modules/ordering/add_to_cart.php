@@ -56,6 +56,7 @@ try {
 
     $cart_item = [
         'id' => $product_id,
+        'product_id' => $product_id,
         'name' => $product['name'],
         'price' => $product['price'],
         'quantity' => $quantity,

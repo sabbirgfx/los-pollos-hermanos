@@ -55,7 +55,6 @@ The online pizza ordering system must have three main modules:
 - Product/menu management
 - User/employee management
 - Order management
-- 
 
 
 ## Features
@@ -74,4 +73,34 @@ The online pizza ordering system must have three main modules:
 - SQL injection prevention using prepared statements
 - XSS protection implemented
 - CSRF protection for forms
+
+## Local Development Setup
+
+### Prerequisites
+- XAMPP (or similar package with Apache, MySQL, PHP)
+- Web browser
+- Git (optional)
+
+### Installation Steps
+1. Install XAMPP
+2. Start Apache and MySQL services from the XAMPP control panel
+3. Clone or extract this repository to `C:\xampp\htdocs\Los Pollos Hermanos` (or your XAMPP htdocs directory)
+4. Open phpMyAdmin (http://localhost/phpmyadmin)
+5. Create a new database named `los_pollos_hermanos`
+6. Import the database schema from `database/schema.sql`
+
+### Running the Website
+1. Ensure Apache and MySQL services are running in XAMPP
+2. Open your browser and navigate to [http://localhost/Los%20Pollos%20Hermanos](http://localhost/Los%20Pollos%20Hermanos)
+3. For admin access, use these default credentials:
+   - Username: admin
+   - Password: password
+
+### Configuration
+- Database settings can be modified in `config/database.php` if needed
+- Default database configuration:
+  - Host: localhost
+  - Username: root
+  - Password: (blank)
+  - Database: los_pollos_hermanos
 
