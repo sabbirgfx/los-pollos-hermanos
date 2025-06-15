@@ -94,7 +94,7 @@ The online pizza ordering system must have three main modules:
 2. Open your browser and navigate to [http://localhost/Los%20Pollos%20Hermanos](http://localhost/Los%20Pollos%20Hermanos)
 3. For admin access, use these default credentials:
    - Username: admin
-   - Password: password
+   - Password: admin123
 
 ### Configuration
 - Database settings can be modified in `config/database.php` if needed
