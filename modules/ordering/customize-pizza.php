@@ -214,7 +214,7 @@ $cheese_options = [
             
             <div class="pizza-preview">
                 <div class="pizza-image">
-                    <img src="<?php echo $pizza['image_url'] ?: 'https://via.placeholder.com/400x400?text=Pizza'; ?>" 
+                    <img src="../../<?php echo $pizza['image_url'] ?: 'https://via.placeholder.com/400x400?text=Pizza'; ?>" 
                          alt="<?php echo htmlspecialchars($pizza['name']); ?>">
                 </div>
                 <div class="pizza-details">

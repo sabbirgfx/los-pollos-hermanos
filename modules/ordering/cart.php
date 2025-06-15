@@ -26,7 +26,7 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
                 'price' => $cartItem['price'],
                 'quantity' => $quantity,
                 'subtotal' => $subtotal,
-                'image_url' => $cartItem['image_url'] ?? 'assets/images/default-product.jpg'
+                'image_url' => $cartItem['image_url'] ? '../../' . $cartItem['image_url'] : 'assets/images/default-product.jpg'
             ];
         }
     }

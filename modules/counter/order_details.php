@@ -172,6 +172,9 @@ try {
                 <div class="items-list">
                     <?php foreach ($orderItems as $item): ?>
                         <div class="item-card">
+                            <img src="../../<?php echo $item['image_url'] ?: 'https://via.placeholder.com/80x80?text=Pizza'; ?>" 
+                                 alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
+                                 class="item-image">
                             <div class="item-header">
                                 <h4><?php echo htmlspecialchars($item['product_name']); ?></h4>
                                 <span class="item-quantity">x<?php echo $item['quantity']; ?></span>

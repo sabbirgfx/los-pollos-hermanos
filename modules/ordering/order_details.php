@@ -114,6 +114,9 @@ $orderItems = getOrderItems($orderId);
                     <div class="order-items">
                         <?php foreach ($orderItems as $item): ?>
                             <div class="order-item">
+                                <img src="../../<?php echo $item['image_url'] ?: 'https://via.placeholder.com/80x80?text=Pizza'; ?>" 
+                                     alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
+                                     class="item-image">
                                 <div class="item-details">
                                     <h4><?php echo htmlspecialchars($item['product_name']); ?></h4>
                                     <p>Quantity: <?php echo $item['quantity']; ?></p>
